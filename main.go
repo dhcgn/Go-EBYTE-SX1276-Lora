@@ -55,6 +55,7 @@ func handleMessages(msg <-chan []byte) {
 			if len(m) == 6 && (m[0] == 0xC0 || m[0] == 0xC1) {
 				fmt.Println("Msg is type Operation Parameters")
 				op := settings.NewOperationParametersFromData(m)
+				fmt.Println("Operation Parameters Hash:", op.GetShortHash())
 				fmt.Println(op)
 			}
 		}
@@ -86,6 +87,7 @@ func sendTime(stream serial.SerialPortIO) {
 
 	for {
 		msg := append(commands.MessagerHeader, []byte(fmt.Sprintf("Time %v from %v", time.Now().Format("2006-01-02 15:04:05.999"), os.Getpid()))...)
+		msg = append(msg, 0x0)
 		sendData(stream, msg)
 
 		time.Sleep(time.Second * 1)

@@ -1,8 +1,13 @@
 package settings
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/base32"
+	"encoding/gob"
 	"encoding/hex"
 	"fmt"
+	"strings"
 )
 
 type Head int
@@ -245,7 +250,29 @@ func NewOperationParametersFromData(data []byte) *OperationParameters {
 	return op
 }
 
+// GetShortHash creates an id which represent the structs value. If the result is equal
+// these structs *could be* the same.
+func (op OperationParameters) GetShortHash() string {
+	return hash(op)[0:12]
+}
+
 func hasBit(n byte, pos uint) bool {
 	val := n & (1 << pos)
 	return (val > 0)
+}
+
+func hash(op interface{}) string {
+	var b bytes.Buffer
+	err := gob.NewEncoder(&b).Encode(op)
+	if err != nil {
+		panic(err)
+	}
+
+	data := b.Bytes()
+
+	h := sha256.New()
+	h.Write(data)
+	sum := h.Sum(nil)
+
+	return strings.ReplaceAll(base32.StdEncoding.EncodeToString(sum), "=", "")
 }
