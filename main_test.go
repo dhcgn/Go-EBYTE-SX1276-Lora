@@ -29,7 +29,7 @@ func Test_receivedSerialDataWorker(t *testing.T) {
 	}()
 
 	duration := time.Millisecond * 1
-	go receivedSerialDataWorker(receivedSerialData, msg, duration)
+	go createMessagesFromRawData(receivedSerialData, msg, duration)
 	go func() {
 		for _, v := range testData {
 			receivedSerialData <- v
@@ -46,7 +46,7 @@ func Test_receivedSerialDataWorker(t *testing.T) {
 		t.Errorf("Expected %v msg, but got %v", len(testData), len(buffer))
 	}
 
-	if !reflect.DeepEqual(buffer,testData){
+	if !reflect.DeepEqual(buffer, testData) {
 		t.Errorf("Expected %v, but got %v", testData, buffer)
 	}
 }

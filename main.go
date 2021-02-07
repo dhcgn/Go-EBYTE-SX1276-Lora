@@ -2,10 +2,10 @@ package main
 
 import (
 	"Go-EBYTE-SX1276-Lora/commands"
+	"Go-EBYTE-SX1276-Lora/serial"
 	"Go-EBYTE-SX1276-Lora/settings"
 	"encoding/hex"
 	"fmt"
-	"github.com/tarm/serial"
 	"log"
 	"os"
 	"strings"
@@ -20,24 +20,17 @@ func main() {
 
 	fmt.Println("Expect device on:", comPath())
 
-	config := &serial.Config{
-		Name:        comPath(),
-		Baud:        9600,
-		ReadTimeout: time.Millisecond * 10,
-		Size:        8,
-	}
-
-	stream, err := serial.OpenPort(config)
+	stream, err := serial.CreateSteam(comPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("CreateSteam on "+comPath()+": ", err)
 	}
 
 	receivedSerialData := make(chan []byte)
 	msg := make(chan []byte)
 
-	go receivedSerialDataWorker(receivedSerialData, msg, time.Millisecond*15)
-	go receivedMsgWorker(msg)
-	go listeningLoop(stream, receivedSerialData)
+	go createMessagesFromRawData(receivedSerialData, msg, time.Millisecond*15)
+	go handleMessages(msg)
+	go listeningRawSerialData(stream, receivedSerialData)
 
 	stream.Write(commands.ReadingOperatingParameters)
 	time.Sleep(time.Millisecond * 30)
@@ -53,7 +46,7 @@ func main() {
 	select {}
 }
 
-func receivedMsgWorker(msg <-chan []byte) {
+func handleMessages(msg <-chan []byte) {
 	for {
 		select {
 		case m := <-msg:
@@ -68,9 +61,8 @@ func receivedMsgWorker(msg <-chan []byte) {
 	}
 }
 
-
-
-func receivedSerialDataWorker(data <-chan []byte, msg chan<- []byte, waitDuration time.Duration) {
+func createMessagesFromRawData(data <-chan []byte, msg chan<- []byte, waitDuration time.Duration) {
+	// TODO Is timer needed, can i use Null-Byte from serial?
 	timer := time.NewTimer(0)
 	timer.Stop()
 
@@ -89,7 +81,7 @@ func receivedSerialDataWorker(data <-chan []byte, msg chan<- []byte, waitDuratio
 	}
 }
 
-func sendTime(stream *serial.Port) {
+func sendTime(stream serial.SerialPortIO) {
 	t := time.NewTicker(time.Second * 5)
 
 	for {
@@ -105,7 +97,7 @@ func sendTime(stream *serial.Port) {
 	}
 }
 
-func sendData(stream *serial.Port, msg []byte) {
+func sendData(stream serial.SerialPortIO, msg []byte) {
 	fmt.Print("Send Time ... ")
 	// fmt.Print(hex.EncodeToString(msg))
 	n, err := stream.Write(msg)
@@ -116,7 +108,7 @@ func sendData(stream *serial.Port, msg []byte) {
 	fmt.Println("send", n, "bytes")
 }
 
-func listeningLoop(stream *serial.Port, data chan []byte) {
+func listeningRawSerialData(stream serial.SerialPortIO, data chan []byte) {
 	fmt.Println("Listening loop started")
 
 	buf := make([]byte, 128)

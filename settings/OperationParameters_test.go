@@ -17,11 +17,11 @@ func TestNewOperationParametersFromData(t *testing.T) {
 		{
 			name: "from docs",
 			args: args{
-				data: []byte{0xC0,0x00,0x00,0x1A, 0x17,0x44},
+				data: []byte{0xC0, 0x00, 0x00, 0x1A, 0x17, 0x44},
 			},
 			want: &OperationParameters{
-				Head:                 HeadSavePowerDown,
-				Address:              [2]byte{
+				Head: HeadSavePowerDown,
+				Address: [2]byte{
 					0x00,
 					0x00,
 				},
@@ -40,8 +40,8 @@ func TestNewOperationParametersFromData(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NewOperationParametersFromData(tt.args.data); !reflect.DeepEqual(got, tt.want) {
-				t.Log("got: ",got)
-				t.Log("want:",tt.want)
+				t.Log("got: ", got)
+				t.Log("want:", tt.want)
 				t.Errorf("NewOperationParametersFromData() = %v, want %v", got, tt.want)
 			}
 		})

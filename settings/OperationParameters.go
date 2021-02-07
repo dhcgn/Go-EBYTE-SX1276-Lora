@@ -8,12 +8,14 @@ import (
 type Head int
 type UartParityBit int
 type TransmissionMode int
+
 // IODriveMode This bit is used to the module internal pull-up
 // resistor. It also increases the level's adaptability in
 // case of open drain. But in some cases, it may need
 // external pull-up resistor.
 type IODriveMode int
 type BaudRate int
+
 // AirDataRate
 // TODO  LoRa Spreading Factors?
 type AirDataRate float64
@@ -36,7 +38,7 @@ func (value Head) String() string {
 	return [...]string{"HeadSaveUndef", "HeadSavePowerDown", "HeadNoSafePowerDown"}[value]
 }
 
-const(
+const (
 	UartParityBit_Undef UartParityBit = iota
 
 	// Conventional notation 8-N-1
@@ -46,10 +48,10 @@ const(
 )
 
 func (value UartParityBit) String() string {
-	return [...]string{"UartParityBit_Undef","UartParityBit_8NI", "UartParityBit_8OI", "UartParityBit_8E1", "UartParityBit_8N1"}[value]
+	return [...]string{"UartParityBit_Undef", "UartParityBit_8NI", "UartParityBit_8OI", "UartParityBit_8E1", "UartParityBit_8N1"}[value]
 }
 
-const(
+const (
 	BaudRateBps_Undef BaudRate = iota
 	// TODO
 	BaudRateBps_9600 BaudRate = 9600
@@ -59,7 +61,7 @@ func (value BaudRate) String() string {
 	return fmt.Sprintf("BaudRate %v bps", int(value))
 }
 
-const(
+const (
 	AirDataRate_Undef AirDataRate = iota
 
 	// TODO
@@ -71,17 +73,17 @@ func (value AirDataRate) String() string {
 	return fmt.Sprintf("AirDataRate %.2f bps", f)
 }
 
-const(
-	TransmissionModeUndef TransmissionMode = iota
+const (
+	TransmissionModeUndef       TransmissionMode = iota
 	TransmissionModeTransparent TransmissionMode = iota
-	TransmissionModeFixed TransmissionMode = iota
+	TransmissionModeFixed       TransmissionMode = iota
 )
 
 func (value TransmissionMode) String() string {
-	return [...]string{"TransmissionMode Undef","Transparent TransmissionMode","Fixed TransmissionMode" }[value]
+	return [...]string{"TransmissionMode Undef", "Transparent TransmissionMode", "Fixed TransmissionMode"}[value]
 }
 
-const(
+const (
 	IODriveModeUndef IODriveMode = iota
 	// IODriveModePushPull TXD and AUX push-pull outputs, RXD pull-up inputs (default value)
 	IODriveModePushPull IODriveMode = iota
@@ -90,10 +92,10 @@ const(
 )
 
 func (value IODriveMode) String() string {
-	return [...]string{"IODriveModeUndef","IODriveModePushPull","IODriveModeOpenCollector" }[value]
+	return [...]string{"IODriveModeUndef", "IODriveModePushPull", "IODriveModeOpenCollector"}[value]
 }
 
-const(
+const (
 	FEC_Undef FEC = iota
 
 	FEC_Off FEC = iota
@@ -102,16 +104,16 @@ const(
 )
 
 func (value FEC) String() string {
-	return [...]string{"FEC_Undef","FEC_Off","FEC_On" }[value]
+	return [...]string{"FEC_Undef", "FEC_Off", "FEC_On"}[value]
 }
 
-const(
+const (
 	WirelessWakeUpTime_Undef WirelessWakeUpTime = iota
 
 	// WirelessWakeUpTime_250ms (default value)
-	WirelessWakeUpTime_250ms WirelessWakeUpTime = 250
-	WirelessWakeUpTime_500ms WirelessWakeUpTime = 500
-	WirelessWakeUpTime_750ms WirelessWakeUpTime = 750
+	WirelessWakeUpTime_250ms  WirelessWakeUpTime = 250
+	WirelessWakeUpTime_500ms  WirelessWakeUpTime = 500
+	WirelessWakeUpTime_750ms  WirelessWakeUpTime = 750
 	WirelessWakeUpTime_1000ms WirelessWakeUpTime = 1000
 	WirelessWakeUpTime_1250ms WirelessWakeUpTime = 1250
 	WirelessWakeUpTime_1500ms WirelessWakeUpTime = 1500
@@ -123,8 +125,7 @@ func (value WirelessWakeUpTime) String() string {
 	return fmt.Sprintf("WirelessWakeUpTime %vms", int(value))
 }
 
-
-const(
+const (
 	TransmissionPowerDb_Undef = iota
 
 	// TransmissionPowerDb_30db (default value)
@@ -140,12 +141,12 @@ func (value TransmissionPowerDb) String() string {
 
 func (value Address) String() string {
 	data := [2]byte(value)
-	return fmt.Sprintf("Address 0x%v",hex.EncodeToString((data)[:]))
+	return fmt.Sprintf("Address 0x%v", hex.EncodeToString((data)[:]))
 }
 
 func (value Channel) String() string {
 	data := byte(value)
-	return fmt.Sprintf("Channel 0x%v",hex.EncodeToString([]byte{data}))
+	return fmt.Sprintf("Channel 0x%v", hex.EncodeToString([]byte{data}))
 }
 
 type OperationParameters struct {
@@ -163,44 +164,43 @@ type OperationParameters struct {
 }
 
 func NewOperationParametersFromData(data []byte) *OperationParameters {
-	op := &OperationParameters{	}
+	op := &OperationParameters{}
 
 	// Set Head
 	if data[0] == 0xC0 {
 		op.Head = HeadSavePowerDown
-	}else if data[0] == 0xC2 {
+	} else if data[0] == 0xC2 {
 		op.Head = HeadNoSafePowerDown
-	}else {
+	} else {
 		panic("Head not valid")
 	}
 
 	// Set Address
 	op.Address = [2]byte{data[1], data[2]}
 
-
 	// Set UartParityBit
 	uart1 := hasBit(data[3], 7)
 	uart2 := hasBit(data[3], 6)
 
-	if uart1 && !uart2  {
+	if uart1 && !uart2 {
 		op.UartParityBit = UartParityBit_8OI
-	}else if !uart1 && uart2  {
+	} else if !uart1 && uart2 {
 		op.UartParityBit = UartParityBit_8E1
-	}else {
+	} else {
 		op.UartParityBit = UartParityBit_8N1
 	}
 
 	// Set Baud Rate
 	if !hasBit(data[3], 5) && hasBit(data[3], 4) && hasBit(data[3], 3) {
 		op.TtlUartBaudRateBps = BaudRateBps_9600
-	}else {
+	} else {
 		panic("Baud Rate not (yet) supported")
 	}
 
 	// Set Air data rate
 	if !hasBit(data[3], 2) && hasBit(data[3], 1) && !hasBit(data[3], 0) {
 		op.AirDataRateKbps = AirDataRate_2_4k
-	}else {
+	} else {
 		panic("Air data rate(yet) supported ")
 	}
 
@@ -208,37 +208,37 @@ func NewOperationParametersFromData(data []byte) *OperationParameters {
 	op.Channel = Channel(data[4])
 
 	// Set TransmissionMode
-	if hasBit(data[5], 7){
+	if hasBit(data[5], 7) {
 		op.TransmissionMode = TransmissionModeFixed
-	}else {
+	} else {
 		op.TransmissionMode = TransmissionModeTransparent
 	}
 
 	// Set IODriveMode
-	if hasBit(data[5], 6){
+	if hasBit(data[5], 6) {
 		op.IODriveMode = IODriveModePushPull
-	}else {
+	} else {
 		op.IODriveMode = IODriveModeOpenCollector
 	}
 
 	// Set WirelessWakeUpTimeMs
 	if !hasBit(data[5], 5) && !hasBit(data[5], 4) && !hasBit(data[5], 3) {
 		op.WirelessWakeUpTimeMs = WirelessWakeUpTime_250ms
-	}else {
+	} else {
 		panic("WirelessWakeUpTimeMs not (yet) supported")
 	}
 
 	// Set IODriveMode
-	if hasBit(data[5], 2){
+	if hasBit(data[5], 2) {
 		op.FEC = FEC_On
-	}else {
+	} else {
 		op.FEC = FEC_Off
 	}
 
 	// Set TransmissionPowerDb
-	if !hasBit(data[5], 1) && !hasBit(data[5], 0)  {
-		op.TransmissionPowerDb= TransmissionPowerDb_30db
-	}else {
+	if !hasBit(data[5], 1) && !hasBit(data[5], 0) {
+		op.TransmissionPowerDb = TransmissionPowerDb_30db
+	} else {
 		panic("TransmissionPowerDb not (yet) supported")
 	}
 
@@ -249,4 +249,3 @@ func hasBit(n byte, pos uint) bool {
 	val := n & (1 << pos)
 	return (val > 0)
 }
-
