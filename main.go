@@ -57,19 +57,28 @@ func handleMessages(msg <-chan []byte) {
 	for {
 		select {
 		case m := <-msg:
-			fmt.Println("Got msg:", "0x"+hex.EncodeToString(m))
 			// Operation Parameters, eg 0xc000001a0644
 			if len(m) == 6 && (m[0] == 0xC0 || m[0] == 0xC1) {
 				fmt.Println("Msg is type Operation Parameters")
 				op := settings.NewOperationParametersFromData(m)
 				fmt.Println("Operation Parameters Hash:", op.GetShortHash())
 				fmt.Println(op)
+				break
 			}
 
 			// Version, eg 0xc3450d14
 			if len(m) == 4 && (m[0] == 0xC3) {
 				fmt.Println("Msg is type Version")
+				break
 			}
+
+			// Get Msg
+			toString := hex.EncodeToString(m)
+			if len(m) > 3 {
+				fmt.Println("Got msg:", "To:", toString[0:4], "Channel:", toString[4:6], "Msg:", string(m[3:]))
+			}
+
+			fmt.Println("Got msg:", "0x"+toString)
 		}
 	}
 }
