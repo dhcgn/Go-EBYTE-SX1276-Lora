@@ -2,6 +2,7 @@ package main
 
 import (
 	"Go-EBYTE-SX1276-Lora/commands"
+	"Go-EBYTE-SX1276-Lora/communication"
 	"Go-EBYTE-SX1276-Lora/serial"
 	"Go-EBYTE-SX1276-Lora/settings"
 	"encoding/hex"
@@ -32,10 +33,16 @@ func main() {
 	go handleMessages(msg)
 	go listeningRawSerialData(stream, receivedSerialData)
 
-	stream.Write(commands.ReadingOperatingParameters)
+	com := communication.New(stream)
+
+	if err := com.RequestConfig(); err != nil {
+		fmt.Println("Error", err)
+	}
 	time.Sleep(time.Millisecond * 30)
 
-	stream.Write(commands.ReadingOperatingParameters)
+	if err := com.RequestVersion(); err != nil {
+		fmt.Println("Error", err)
+	}
 	time.Sleep(time.Millisecond * 30)
 
 	go sendTime(stream)
@@ -51,12 +58,17 @@ func handleMessages(msg <-chan []byte) {
 		select {
 		case m := <-msg:
 			fmt.Println("Got msg:", "0x"+hex.EncodeToString(m))
-			// Operation Parameters
+			// Operation Parameters, eg 0xc000001a0644
 			if len(m) == 6 && (m[0] == 0xC0 || m[0] == 0xC1) {
 				fmt.Println("Msg is type Operation Parameters")
 				op := settings.NewOperationParametersFromData(m)
 				fmt.Println("Operation Parameters Hash:", op.GetShortHash())
 				fmt.Println(op)
+			}
+
+			// Version, eg 0xc3450d14
+			if len(m) == 4 && (m[0] == 0xC3) {
+				fmt.Println("Msg is type Version")
 			}
 		}
 	}
@@ -115,6 +127,7 @@ func listeningRawSerialData(stream serial.SerialPortIO, data chan []byte) {
 
 	buf := make([]byte, 128)
 	for {
+		// TODO Is this necessary? Can I just write and then read?
 		n, err := stream.Read(buf)
 
 		if err != nil {
