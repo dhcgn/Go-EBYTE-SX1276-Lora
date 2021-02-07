@@ -13,8 +13,16 @@ This repository is in an early state, the feature set is limited but will be exp
 - Receiver Module: https://www.ebyte.com/en/product-view-news.aspx?id=132
 - Spec: https://www.ebyte.com/en/downpdf.aspx?id=132 (or see [docs/E32-868T20D_Usermanual_EN_v1.8.pdf](docs/E32-868T20D_Usermanual_EN_v1.8.pdf))
 
+## Gettings started
+
+```
+PS> go build -o bin.exe; .\bin.exe COM4
+```
+
 ## Feature Set
 
+- `[X]` Run on Windows
+- `[ ]` Run on Linux (Raspberry)
 - `[X]` Read settings from the LoRa Receiver Module
 - `[ ]` Write settings from the LoRa Receiver Module
 - `[X]` Send Data
